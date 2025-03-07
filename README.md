@@ -1,7 +1,7 @@
 # @vinelink/react-cursor-position
 
 [![npm version](https://img.shields.io/npm/v/@vinelink/react-cursor-position.svg?style=for-the-badge)](https://www.npmjs.com/package/@vinelink/react-cursor-position)
-[![downloads](https://img.shields.io/npm/dm/@vinelink/react-perfect-scrollbar.svg?style=for-the-badge&color=blue)](https://npm-stat.com/charts.html?package=%40vinelink%2Freact-cursor-position)
+[![downloads](https://img.shields.io/npm/dm/@vinelink/react-cursor-position.svg?style=for-the-badge&color=blue)](https://npm-stat.com/charts.html?package=%40vinelink%2Freact-cursor-position)
 
 A React component that decorates its children with mouse and touch cursor coordinates, plotted relative to itself.
 
