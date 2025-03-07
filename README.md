@@ -140,3 +140,11 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+## Keywords
+
+- react
+- react-cursor-position
+- react-cursor
+- cursor-position
+- cursor
