@@ -8,7 +8,11 @@ import React, {
   useMemo,
 } from "react";
 import Core from "./lib/ElementRelativeCursorPosition";
-import { INTERACTIONS, MOUSE_EMULATION_GUARD_TIMER_NAME } from "./constants";
+import {
+  DEFAULT_CURSOR_STATE,
+  INTERACTIONS,
+  MOUSE_EMULATION_GUARD_TIMER_NAME,
+} from "./constants";
 import PressActivation from "./lib/PressActivation";
 import TouchActivation from "./lib/TouchActivation";
 import TapActivation from "./lib/TapActivation";
@@ -23,6 +27,7 @@ import type {
   Position,
   ReactCursorPositionProps,
 } from "./type";
+import ReactCursorPositionContext from "./context";
 
 export { INTERACTIONS };
 
@@ -42,6 +47,7 @@ const defaultProps: ReactCursorPositionProps = {
   shouldStopTouchMovePropagation: false,
   tapDurationInMs: 180,
   tapMoveThreshold: 5,
+  cursorKey: "cursor_key",
 };
 
 const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
@@ -64,23 +70,12 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
     style,
     tapDurationInMs = defaultProps.tapDurationInMs!,
     tapMoveThreshold = defaultProps.tapMoveThreshold!,
+    cursorKey = defaultProps.cursorKey!,
   } = props;
 
   const [state, setState] = useState<CursorState>({
-    detectedEnvironment: {
-      isMouseDetected: false,
-      isTouchDetected: false,
-    },
-    elementDimensions: {
-      width: 0,
-      height: 0,
-    },
-    isActive: false,
-    isPositionOutside: true,
-    position: {
-      x: 0,
-      y: 0,
-    },
+    ...DEFAULT_CURSOR_STATE,
+    cursorKey,
   });
 
   const [elNode, setElNode] = useState<HTMLDivElement | null>(null);
@@ -389,16 +384,18 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
   const childProps = mapChildProps(state);
 
   return (
-    <div
-      className={className}
-      ref={elRef}
-      style={{
-        ...style,
-        WebkitUserSelect: "none",
-      }}
-    >
-      {decorateChildren(children, childProps)}
-    </div>
+    <ReactCursorPositionContext.Provider value={{ state, setState }}>
+      <div
+        className={className}
+        ref={elRef}
+        style={{
+          ...style,
+          WebkitUserSelect: "none",
+        }}
+      >
+        {decorateChildren(children, childProps)}
+      </div>
+    </ReactCursorPositionContext.Provider>
   );
 };
 

@@ -10,6 +10,7 @@ This is a modernized fork of [react-cursor-position](https://github.com/ethansel
 ## Features
 
 - Mouse and touch event support
+- Hooks for cursor state
 - Configurable activation modes for mouse and touch input
 - Support for hover delay and hover off delay
 - Press activation with configurable duration and movement threshold
@@ -67,8 +68,30 @@ const YourComponent = () => {
 | `style`                          | `object`   | `undefined`      | Inline styles                                              |
 | `tapDurationInMs`                | `number`   | `180`            | Tap activation duration                                    |
 | `tapMoveThreshold`               | `number`   | `5`              | Tap movement threshold in pixels                           |
+| `cursorKey`                      | `string`   | `'cursor_key'`   | Unique identifier for the cursor                           |
 
-### Child Props
+### Hooks
+
+#### `useReactCursorPosition`
+
+Returns the cursor state.
+
+```ts
+const PositionLabel = () => {
+  const [state] = useReactCursorPosition();
+
+const Example = () => {
+  return (
+    <>
+      <ReactCursorPosition>
+        <PositionLabel />
+      </ReactCursorPosition>
+    </>
+  );
+};
+```
+
+### Cursor State
 
 The following props are passed to child components:
 
@@ -140,11 +163,3 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Keywords
-
-- react
-- react-cursor-position
-- react-cursor
-- cursor-position
-- cursor
