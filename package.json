@@ -1,0 +1,47 @@
+{
+  "name": "@vinelink/react-cursor-position",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vinelink/react-cursor-position.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vinelink/react-cursor-position/issues"
+  },
+  "homepage": "https://github.com/vinelink/react-cursor-position#readme",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "storybook": "storybook dev -p 6006"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@rsbuild/core": "^1.2.12",
+    "@rsbuild/plugin-react": "^1.1.1",
+    "@rslib/core": "^0.5.2",
+    "@storybook/addon-essentials": "^8.6.2",
+    "@storybook/test": "^8.6.2",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "react": "^19.0.0",
+    "storybook": "^8.6.2",
+    "storybook-addon-rslib": "^1.0.0",
+    "storybook-react-rsbuild": "^1.0.0",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "react": ">=16.9.0",
+    "react-dom": ">=16.9.0"
+  }
+}
