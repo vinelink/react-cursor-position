@@ -31,6 +31,8 @@ yarn add @vinelink/react-cursor-position
 pnpm add @vinelink/react-cursor-position
 ```
 
+> This package ships as ESM only. Use a bundler or a Node.js setup that supports ES modules.
+
 ## Usage
 
 ```tsx
@@ -44,6 +46,10 @@ const YourComponent = () => {
   );
 };
 ```
+
+> `ReactCursorPosition` is available as both the default and a named export:
+> `import ReactCursorPosition from "..."` or
+> `import { ReactCursorPosition } from "..."`.
 
 ## API
 
@@ -68,27 +74,37 @@ const YourComponent = () => {
 | `style`                          | `object`   | `undefined`      | Inline styles                                              |
 | `tapDurationInMs`                | `number`   | `180`            | Tap activation duration                                    |
 | `tapMoveThreshold`               | `number`   | `5`              | Tap movement threshold in pixels                           |
-| `cursorKey`                      | `string`   | `'cursor_key'`   | Unique identifier for the cursor                           |
 
 ### Hooks
 
 #### `useReactCursorPosition`
 
-Returns the cursor state.
+Read the cursor state from any descendant component. Returns a tuple whose first
+element is the current `CursorState`.
 
-```ts
+```tsx
+import ReactCursorPosition, {
+  useReactCursorPosition,
+} from "@vinelink/react-cursor-position";
+
 const PositionLabel = () => {
   const [state] = useReactCursorPosition();
+  const {
+    position: { x, y },
+  } = state;
 
-const Example = () => {
   return (
-    <>
-      <ReactCursorPosition>
-        <PositionLabel />
-      </ReactCursorPosition>
-    </>
+    <p>
+      x: {x}, y: {y}
+    </p>
   );
 };
+
+const Example = () => (
+  <ReactCursorPosition>
+    <PositionLabel />
+  </ReactCursorPosition>
+);
 ```
 
 ### Cursor State

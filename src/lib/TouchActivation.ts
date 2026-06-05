@@ -10,7 +10,7 @@ export default class TouchActivation extends TouchEnvironmentActivation {
     super({ onIsActiveChanged });
   }
 
-  touchStarted({ position }: TouchEventOptions): void {
+  touchStarted(_options: TouchEventOptions): void {
     this.activate();
   }
 }

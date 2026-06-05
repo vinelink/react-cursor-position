@@ -2,11 +2,6 @@ import { PRESS_EVENT_TIMER_NAME } from '../constants';
 import TouchEnvironmentActivation from './TouchEnvironmentActivation';
 import type { ActiveChangedCallback, TouchEventOptions } from '../type';
 
-interface Position {
-  x: number;
-  y: number;
-}
-
 interface PressActivationOptions {
   onIsActiveChanged: ActiveChangedCallback;
   pressDurationInMs: number;
@@ -16,8 +11,6 @@ interface PressActivationOptions {
 export default class PressActivation extends TouchEnvironmentActivation {
   private readonly pressDurationInMs: number;
   private readonly pressMoveThreshold: number;
-  protected currentElTop: number;
-  protected initialElTop: number;
 
   constructor({
     onIsActiveChanged,
@@ -28,12 +21,10 @@ export default class PressActivation extends TouchEnvironmentActivation {
 
     this.pressDurationInMs = pressDurationInMs;
     this.pressMoveThreshold = pressMoveThreshold;
-    this.currentElTop = 0;
-    this.initialElTop = 0;
   }
 
   touchStarted({ position }: TouchEventOptions): void {
-    this.initPressEventCriteria(position);
+    this.initMoveThreshold(position);
     this.setPressEventTimer();
   }
 
@@ -42,30 +33,17 @@ export default class PressActivation extends TouchEnvironmentActivation {
       return;
     }
 
-    this.setPressEventCriteria(position);
+    this.setMoveThresholdCriteria(position);
   }
 
   private setPressEventTimer(): void {
     this.timers.push({
       name: PRESS_EVENT_TIMER_NAME,
       id: setTimeout(() => {
-        if (
-          Math.abs(this.currentElTop - this.initialElTop) <
-          this.pressMoveThreshold
-        ) {
+        if (this.getMoveDistance() < this.pressMoveThreshold) {
           this.activate();
         }
       }, this.pressDurationInMs),
     });
-  }
-
-  private setPressEventCriteria(position: Position): void {
-    this.currentElTop = position.y;
-  }
-
-  private initPressEventCriteria(position: Position): void {
-    const top = position.y;
-    this.initialElTop = top;
-    this.currentElTop = top;
   }
 }

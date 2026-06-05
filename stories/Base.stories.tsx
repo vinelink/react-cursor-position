@@ -1,5 +1,4 @@
-import React from "react";
-import { ReactCursorPosition, type CursorState } from "../src";
+import { ReactCursorPosition, type CursorState } from '../src';
 
 const PositionLabel = (props?: CursorState) => {
   const {
@@ -11,7 +10,7 @@ const PositionLabel = (props?: CursorState) => {
     position: { x = 0, y = 0 } = {},
     isActive = false,
     isPositionOutside = false,
-  } = props!;
+  } = props ?? ({} as CursorState);
 
   return (
     <div>
@@ -25,35 +24,25 @@ const PositionLabel = (props?: CursorState) => {
       <br />
       {`height: ${height}`}
       <br />
-      {`isPositionOutside: ${isPositionOutside ? "true" : "false"}`}
+      {`isPositionOutside: ${isPositionOutside ? 'true' : 'false'}`}
       <br />
-      {`isMouseDetected: ${isMouseDetected ? "true" : "false"}`}
+      {`isMouseDetected: ${isMouseDetected ? 'true' : 'false'}`}
       <br />
-      {`isTouchDetected: ${isTouchDetected ? "true" : "false"}`}
+      {`isTouchDetected: ${isTouchDetected ? 'true' : 'false'}`}
     </div>
   );
 };
 
-PositionLabel.defaultProps = {
-  shouldShowIsActive: true,
-};
-
 const Example = () => {
   return (
-    <>
-      <ReactCursorPosition
-        {...{
-          className: "example__target example__target--basic",
-        }}
-      >
-        <PositionLabel />
-      </ReactCursorPosition>
-    </>
+    <ReactCursorPosition className="example__target example__target--basic">
+      <PositionLabel />
+    </ReactCursorPosition>
   );
 };
 
 const meta = {
-  title: "Example/Base",
+  title: 'Example/Base',
   component: Example,
 };
 

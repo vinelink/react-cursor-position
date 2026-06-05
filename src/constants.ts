@@ -8,14 +8,12 @@ export const UNSET_ACTIVATION_TIMER_NAME = 'unsetHovering';
 export const INTERACTIONS = {
   TOUCH: 'touch',
   TAP: 'tap',
-  DOUBLE_TAP: 'double_tap',
   PRESS: 'press',
   CLICK: 'click',
   HOVER: 'hover',
 };
 
 export const DEFAULT_CURSOR_STATE: CursorState = {
-  cursorKey: '',
   detectedEnvironment: {
     isMouseDetected: false,
     isTouchDetected: false,

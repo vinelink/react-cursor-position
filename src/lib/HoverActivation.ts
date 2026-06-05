@@ -28,7 +28,7 @@ export default class HoverActivation extends MouseEnvironmentActivation {
 
   override mouseEntered(): void {
     this.clearTimers();
-    this.schedulActivation(this.hoverDelayInMs);
+    this.scheduleActivation(this.hoverDelayInMs);
   }
 
   override mouseLeft(): void {
@@ -36,7 +36,7 @@ export default class HoverActivation extends MouseEnvironmentActivation {
     this.scheduleDeactivation(this.hoverOffDelayInMs);
   }
 
-  private schedulActivation(schedule: number): void {
+  private scheduleActivation(schedule: number): void {
     const scheduleId = setTimeout(() => {
       this.activate();
     }, schedule);

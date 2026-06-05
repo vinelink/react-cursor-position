@@ -3,33 +3,32 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useMemo,
   type ReactNode,
   type ReactElement,
-  useMemo,
-} from "react";
-import Core from "./lib/ElementRelativeCursorPosition";
+} from 'react';
+import Core from './lib/ElementRelativeCursorPosition';
 import {
   DEFAULT_CURSOR_STATE,
   INTERACTIONS,
   MOUSE_EMULATION_GUARD_TIMER_NAME,
-} from "./constants";
-import PressActivation from "./lib/PressActivation";
-import TouchActivation from "./lib/TouchActivation";
-import TapActivation from "./lib/TapActivation";
-import HoverActivation from "./lib/HoverActivation";
-import ClickActivation from "./lib/ClickActivation";
-import type TouchEnvironmentActivation from "./lib/TouchEnvironmentActivation";
-import type MouseEnvironmentActivation from "./lib/MouseEnvironmentActivation";
-import useEventListener from "./utils/useEventListener";
+} from './constants';
+import PressActivation from './lib/PressActivation';
+import TouchActivation from './lib/TouchActivation';
+import TapActivation from './lib/TapActivation';
+import HoverActivation from './lib/HoverActivation';
+import ClickActivation from './lib/ClickActivation';
+import type TouchEnvironmentActivation from './lib/TouchEnvironmentActivation';
+import type MouseEnvironmentActivation from './lib/MouseEnvironmentActivation';
+import useEventListener from './utils/useEventListener';
+import useLatest from './utils/useLatest';
 import type {
   CursorState,
   ElementDimensions,
   Position,
   ReactCursorPositionProps,
-} from "./type";
-import ReactCursorPositionContext from "./context";
-
-export { INTERACTIONS };
+} from './type';
+import ReactCursorPositionContext from './context';
 
 const defaultProps: ReactCursorPositionProps = {
   activationInteractionMouse: INTERACTIONS.HOVER,
@@ -47,8 +46,10 @@ const defaultProps: ReactCursorPositionProps = {
   shouldStopTouchMovePropagation: false,
   tapDurationInMs: 180,
   tapMoveThreshold: 5,
-  cursorKey: "cursor_key",
 };
+
+const REACT_MEMO_TYPE = Symbol.for('react.memo');
+const REACT_FORWARD_REF_TYPE = Symbol.for('react.forward_ref');
 
 const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
   const {
@@ -70,22 +71,22 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
     style,
     tapDurationInMs = defaultProps.tapDurationInMs!,
     tapMoveThreshold = defaultProps.tapMoveThreshold!,
-    cursorKey = defaultProps.cursorKey!,
   } = props;
 
-  const [state, setState] = useState<CursorState>({
-    ...DEFAULT_CURSOR_STATE,
-    cursorKey,
-  });
+  const [state, setState] = useState<CursorState>(DEFAULT_CURSOR_STATE);
 
   const [elNode, setElNode] = useState<HTMLDivElement | null>(null);
   const coreRef = useRef<Core | null>(null);
   const timersRef = useRef<Array<{ name: string; id: number }>>([]);
   const shouldGuardAgainstMouseEmulationRef = useRef(false);
-  const touchActivationRef = useRef<TouchEnvironmentActivation>(null);
-  const mouseActivationRef = useRef<MouseEnvironmentActivation>(null);
+  const touchActivationRef = useRef<TouchEnvironmentActivation | null>(null);
+  const mouseActivationRef = useRef<MouseEnvironmentActivation | null>(null);
 
-  const elRef = useCallback((el: HTMLDivElement) => {
+  const onActivationChangedRef = useLatest(onActivationChanged);
+  const isActiveRef = useRef(state.isActive);
+  isActiveRef.current = state.isActive;
+
+  const elRef = useCallback((el: HTMLDivElement | null) => {
     setElNode(el);
   }, []);
 
@@ -94,7 +95,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
       const { width, height } = el.getBoundingClientRect();
       return { width, height };
     },
-    []
+    [],
   );
 
   const init = useCallback(() => {
@@ -107,29 +108,24 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
     }));
   }, [elNode, getElementDimensions]);
 
-  const setPositionState = useCallback(
-    (position: Position) => {
+  const setPositionState = useCallback((position: Position) => {
+    setState((prev) => {
       const isPositionOutside =
         position.x < 0 ||
         position.y < 0 ||
-        position.x > state.elementDimensions.width ||
-        position.y > state.elementDimensions.height;
+        position.x > prev.elementDimensions.width ||
+        position.y > prev.elementDimensions.height;
 
-      setState((prev) => ({
-        ...prev,
-        isPositionOutside,
-        position,
-      }));
-    },
-    [state.elementDimensions]
-  );
+      return { ...prev, isPositionOutside, position };
+    });
+  }, []);
 
   const onIsActiveChanged = useCallback(
     ({ isActive }: { isActive: boolean }) => {
       setState((prev) => ({ ...prev, isActive }));
-      onActivationChanged({ isActive });
+      onActivationChangedRef.current({ isActive });
     },
-    [onActivationChanged]
+    [onActivationChangedRef],
   );
 
   useEffect(() => {
@@ -155,7 +151,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
           });
           break;
         default:
-          throw new Error("Must implement a touch activation strategy");
+          throw new Error('Must implement a touch activation strategy');
       }
     };
 
@@ -174,12 +170,17 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
           });
           break;
         default:
-          throw new Error("Must implement a mouse activation strategy");
+          throw new Error('Must implement a mouse activation strategy');
       }
     };
 
     setTouchActivation();
     setMouseActivation();
+
+    return () => {
+      touchActivationRef.current?.clearTimers();
+      mouseActivationRef.current?.clearTimers();
+    };
   }, [
     activationInteractionTouch,
     activationInteractionMouse,
@@ -210,7 +211,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
 
       touchActivationRef.current?.touchStarted({ e, position });
     },
-    [init, setPositionState]
+    [init, setPositionState],
   );
 
   const onTouchMove = useCallback(
@@ -220,7 +221,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
       const position = coreRef.current.getCursorPosition(e.touches[0]);
       touchActivationRef.current?.touchMoved({ e, position });
 
-      if (!state.isActive) return;
+      if (!isActiveRef.current) return;
 
       setPositionState(position);
       e.preventDefault();
@@ -229,7 +230,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
         e.stopPropagation();
       }
     },
-    [state.isActive, setPositionState, shouldStopTouchMovePropagation]
+    [setPositionState, shouldStopTouchMovePropagation],
   );
 
   const onTouchEnd = useCallback(() => {
@@ -269,7 +270,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
       setPositionState(coreRef.current.getCursorPosition(e));
       mouseActivationRef.current?.mouseEntered();
     },
-    [init, setPositionState]
+    [init, setPositionState],
   );
 
   const onMouseMove = useCallback(
@@ -280,7 +281,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
       setPositionState(position);
       mouseActivationRef.current?.mouseMoved(position);
     },
-    [setPositionState]
+    [setPositionState],
   );
 
   const onMouseLeave = useCallback(() => {
@@ -301,7 +302,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
         },
       }));
     },
-    [setPositionState]
+    [setPositionState],
   );
 
   const listenerOptionsWithPassive = useMemo(
@@ -309,35 +310,29 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
       passive: false,
       enabled: isEnabled,
     }),
-    [isEnabled]
+    [isEnabled],
   );
 
   const listenerOptions = useMemo(
     () => ({
       enabled: isEnabled,
     }),
-    [isEnabled]
+    [isEnabled],
   );
 
   useEventListener(
     elNode,
-    "touchstart",
+    'touchstart',
     onTouchStart,
-    listenerOptionsWithPassive
+    listenerOptionsWithPassive,
   );
-  useEventListener(
-    elNode,
-    "touchmove",
-    onTouchMove,
-    listenerOptionsWithPassive
-  );
-
-  useEventListener(elNode, "touchend", onTouchEnd, listenerOptions);
-  useEventListener(elNode, "touchcancel", onTouchCancel, listenerOptions);
-  useEventListener(elNode, "mouseenter", onMouseEnter, listenerOptions);
-  useEventListener(elNode, "mousemove", onMouseMove, listenerOptions);
-  useEventListener(elNode, "mouseleave", onMouseLeave, listenerOptions);
-  useEventListener(elNode, "click", onClick, listenerOptions);
+  useEventListener(elNode, 'touchmove', onTouchMove, listenerOptionsWithPassive);
+  useEventListener(elNode, 'touchend', onTouchEnd, listenerOptions);
+  useEventListener(elNode, 'touchcancel', onTouchCancel, listenerOptions);
+  useEventListener(elNode, 'mouseenter', onMouseEnter, listenerOptions);
+  useEventListener(elNode, 'mousemove', onMouseMove, listenerOptions);
+  useEventListener(elNode, 'mouseleave', onMouseLeave, listenerOptions);
+  useEventListener(elNode, 'click', onClick, listenerOptions);
 
   useEffect(() => {
     return () => {
@@ -348,37 +343,64 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
     };
   }, []);
 
+  const skipFirstPositionRef = useRef(true);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fire only on position change
   useEffect(() => {
+    if (skipFirstPositionRef.current) {
+      skipFirstPositionRef.current = false;
+      return;
+    }
     onPositionChanged(state);
-  }, [state, onPositionChanged]);
+  }, [state.position]);
 
+  const skipFirstEnvironmentRef = useRef(true);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fire only on environment change
   useEffect(() => {
+    if (skipFirstEnvironmentRef.current) {
+      skipFirstEnvironmentRef.current = false;
+      return;
+    }
     onDetectedEnvironmentChanged(state.detectedEnvironment);
-  }, [state.detectedEnvironment, onDetectedEnvironmentChanged]);
+  }, [state.detectedEnvironment]);
 
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  const decorateChild = useCallback((child: ReactElement, props: any) => {
-    return React.cloneElement(child, props);
-  }, []);
+  const decorateChild = useCallback(
+    // biome-ignore lint/suspicious/noExplicitAny: cloned props are caller-defined
+    (child: ReactElement, childProps: any) => {
+      return React.cloneElement(child, childProps);
+    },
+    [],
+  );
 
   const shouldDecorateChild = useCallback(
-    (child: ReactElement) => {
-      return (
-        !!child && typeof child.type === "function" && shouldDecorateChildren
-      );
+    (child: ReactElement): boolean => {
+      if (!child || !shouldDecorateChildren) return false;
+
+      const { type } = child;
+      if (typeof type === 'function') return true;
+
+      if (typeof type === 'object' && type !== null) {
+        const $$typeof = (type as { $$typeof?: symbol }).$$typeof;
+        return (
+          $$typeof === REACT_MEMO_TYPE || $$typeof === REACT_FORWARD_REF_TYPE
+        );
+      }
+
+      return false;
     },
-    [shouldDecorateChildren]
+    [shouldDecorateChildren],
   );
 
   const decorateChildren = useCallback(
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    (children: ReactNode, props: any) => {
-      return React.Children.map(children, (child) => {
+    // biome-ignore lint/suspicious/noExplicitAny: cloned props are caller-defined
+    (childrenToDecorate: ReactNode, childProps: any) => {
+      return React.Children.map(childrenToDecorate, (child) => {
         if (!React.isValidElement(child)) return child;
-        return shouldDecorateChild(child) ? decorateChild(child, props) : child;
+        return shouldDecorateChild(child as ReactElement)
+          ? decorateChild(child as ReactElement, childProps)
+          : child;
       });
     },
-    [shouldDecorateChild, decorateChild]
+    [shouldDecorateChild, decorateChild],
   );
 
   const childProps = mapChildProps(state);
@@ -390,7 +412,7 @@ const ReactCursorPosition: React.FC<ReactCursorPositionProps> = (props) => {
         ref={elRef}
         style={{
           ...style,
-          WebkitUserSelect: "none",
+          WebkitUserSelect: 'none',
         }}
       >
         {decorateChildren(children, childProps)}

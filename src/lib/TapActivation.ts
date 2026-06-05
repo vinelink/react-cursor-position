@@ -1,34 +1,28 @@
 import { TAP_GESTURE_TIMER_NAME } from '../constants';
 import TouchEnvironmentActivation from './TouchEnvironmentActivation';
-import type {
-  ActiveChangedCallback,
-  Position,
-  TouchEventOptions,
-} from '../type';
+import type { ActiveChangedCallback, TouchEventOptions } from '../type';
+
+interface TapActivationOptions {
+  onIsActiveChanged: ActiveChangedCallback;
+  tapDurationInMs: number;
+  tapMoveThreshold: number;
+}
 
 export default class TapActivation extends TouchEnvironmentActivation {
   private hasTapGestureEnded: boolean;
-  private tapDurationInMs: number;
-  private tapMoveThreshold: number;
-  protected initialElTop: number;
-  protected currentElTop: number;
+  private readonly tapDurationInMs: number;
+  private readonly tapMoveThreshold: number;
 
   constructor({
     onIsActiveChanged,
     tapDurationInMs,
     tapMoveThreshold,
-  }: {
-    onIsActiveChanged: ActiveChangedCallback;
-    tapDurationInMs: number;
-    tapMoveThreshold: number;
-  }) {
+  }: TapActivationOptions) {
     super({ onIsActiveChanged });
 
     this.hasTapGestureEnded = false;
     this.tapDurationInMs = tapDurationInMs;
     this.tapMoveThreshold = tapMoveThreshold;
-    this.initialElTop = 0;
-    this.currentElTop = 0;
   }
 
   touchStarted({ position }: TouchEventOptions): void {
@@ -49,14 +43,10 @@ export default class TapActivation extends TouchEnvironmentActivation {
     this.hasTapGestureEnded = true;
   }
 
-  private get hasPassedMoveThreshold(): boolean {
-    return (
-      Math.abs(this.currentElTop - this.initialElTop) > this.tapMoveThreshold
-    );
-  }
-
   private get isTapGestureActive(): boolean {
-    return !this.hasPassedMoveThreshold && this.hasTapGestureEnded;
+    return (
+      this.getMoveDistance() <= this.tapMoveThreshold && this.hasTapGestureEnded
+    );
   }
 
   private setTapEventTimer(): void {
@@ -68,15 +58,5 @@ export default class TapActivation extends TouchEnvironmentActivation {
         }
       }, this.tapDurationInMs),
     });
-  }
-
-  private setMoveThresholdCriteria(position: Position): void {
-    this.currentElTop = position.y;
-  }
-
-  private initMoveThreshold(position: Position): void {
-    const top = position.y;
-    this.initialElTop = top;
-    this.currentElTop = top;
   }
 }

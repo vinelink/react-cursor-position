@@ -1,24 +1,27 @@
-import { createContext, useContext, useState } from "react";
-import type { CursorState } from "./type";
-import { DEFAULT_CURSOR_STATE } from "./constants";
+import {
+  createContext,
+  useContext,
+  type Dispatch,
+  type SetStateAction,
+} from 'react';
+import type { CursorState } from './type';
 
-const ReactCursorPositionContext = createContext<{
+interface ReactCursorPositionContextValue {
   state: CursorState;
-  setState: (state: CursorState) => void;
-}>({
-  state: DEFAULT_CURSOR_STATE,
-  setState: () => {},
-});
+  setState: Dispatch<SetStateAction<CursorState>>;
+}
+
+const ReactCursorPositionContext =
+  createContext<ReactCursorPositionContextValue | null>(null);
 
 export const useReactCursorPosition = () => {
   const context = useContext(ReactCursorPositionContext);
-  const state = context.state;
   if (!context) {
     throw new Error(
-      "useReactCursorPosition must be used within a ReactCursorPosition"
+      'useReactCursorPosition must be used within a ReactCursorPosition',
     );
   }
-  return [state];
+  return [context.state] as const;
 };
 
 export default ReactCursorPositionContext;

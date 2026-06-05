@@ -24,7 +24,6 @@ export interface DetectedEnvironment {
 }
 
 export interface CursorState {
-  cursorKey: string;
   detectedEnvironment: DetectedEnvironment;
   elementDimensions: ElementDimensions;
   isActive: boolean;
@@ -33,7 +32,6 @@ export interface CursorState {
 }
 
 export interface ReactCursorPositionProps {
-  cursorKey?: string;
   activationInteractionMouse?:
     | typeof INTERACTIONS.CLICK
     | typeof INTERACTIONS.HOVER;

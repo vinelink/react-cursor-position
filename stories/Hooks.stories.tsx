@@ -1,6 +1,4 @@
-import React from "react";
-import { ReactCursorPosition, type CursorState } from "../src";
-import { useReactCursorPosition } from "../src/context";
+import { ReactCursorPosition, useReactCursorPosition } from '../src';
 
 const PositionLabel = () => {
   const [state] = useReactCursorPosition();
@@ -28,35 +26,25 @@ const PositionLabel = () => {
       <br />
       {`height: ${height}`}
       <br />
-      {`isPositionOutside: ${isPositionOutside ? "true" : "false"}`}
+      {`isPositionOutside: ${isPositionOutside ? 'true' : 'false'}`}
       <br />
-      {`isMouseDetected: ${isMouseDetected ? "true" : "false"}`}
+      {`isMouseDetected: ${isMouseDetected ? 'true' : 'false'}`}
       <br />
-      {`isTouchDetected: ${isTouchDetected ? "true" : "false"}`}
+      {`isTouchDetected: ${isTouchDetected ? 'true' : 'false'}`}
     </div>
   );
 };
 
-PositionLabel.defaultProps = {
-  shouldShowIsActive: true,
-};
-
 const Example = () => {
   return (
-    <>
-      <ReactCursorPosition
-        {...{
-          className: "example__target example__target--basic",
-        }}
-      >
-        <PositionLabel />
-      </ReactCursorPosition>
-    </>
+    <ReactCursorPosition className="example__target example__target--basic">
+      <PositionLabel />
+    </ReactCursorPosition>
   );
 };
 
 const meta = {
-  title: "Example/Hooks",
+  title: 'Example/Hooks',
   component: Example,
 };
 
