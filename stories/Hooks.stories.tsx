@@ -1,3 +1,4 @@
+import React from 'react';
 import { ReactCursorPosition, useReactCursorPosition } from '../src';
 
 const PositionLabel = () => {

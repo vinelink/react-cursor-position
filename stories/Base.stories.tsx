@@ -1,6 +1,7 @@
+import React from 'react';
 import { ReactCursorPosition, type CursorState } from '../src';
 
-const PositionLabel = (props?: CursorState) => {
+const PositionLabel = (props: Partial<CursorState> = {}) => {
   const {
     detectedEnvironment: {
       isMouseDetected = false,
@@ -10,7 +11,7 @@ const PositionLabel = (props?: CursorState) => {
     position: { x = 0, y = 0 } = {},
     isActive = false,
     isPositionOutside = false,
-  } = props ?? ({} as CursorState);
+  } = props;
 
   return (
     <div>
